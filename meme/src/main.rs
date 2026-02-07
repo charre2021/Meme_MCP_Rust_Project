@@ -9,7 +9,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let Ok(api_key) = env::var("API_LEAGUE_API_KEY") else {
         panic!("API key could not be loaded correctly from the environmental variables.");
     };
-    println!("Here is your api key: {}", api_key);
+    let params = [("keywords", "cat"), ("api-key", &api_key), ("media-type", "image/jpeg")];
+    let client = reqwest::Client::new();
+    let content = client.get(BASE_URL).query(&params).send().await?.text().await?;
+        
+    println!("Here is the response: {content:?}");
     Ok(())
 
 }
