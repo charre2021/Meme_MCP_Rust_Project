@@ -32,6 +32,18 @@ fn load_key() -> String {
     api_key
 }
 
+async fn get_picture(url: String) -> String {
+    reqwest::Client::new()
+        .get(url)
+        .send()
+        .await
+        .expect("Could not retrieve picture url.")
+        .text()
+        .await
+        .unwrap()
+}
+
+
 async fn get_meme(kw : String, key : String) -> Meme {
     let params = [
         ("keywords", kw),
@@ -52,8 +64,7 @@ async fn get_meme(kw : String, key : String) -> Meme {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {  
     let arg = Args::parse();
-    let content = get_meme(arg.keyword_to_search, load_key()).await;
-    println!("Here is your content: {content:?}");
-
+    let meme_content = get_meme(arg.keyword_to_search, load_key()).await;
+    println!("Here is the response from the picture url: {}", get_picture(meme_content.url).await);
     Ok(())
 }
