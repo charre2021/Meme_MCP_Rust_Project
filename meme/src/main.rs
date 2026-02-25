@@ -1,5 +1,6 @@
 use clap::Parser;
 use dotenv::dotenv;
+use reqwest;
 use serde::{Deserialize, Serialize};
 use std::env;
 
@@ -23,27 +24,35 @@ struct Meme {
     ratio: f32,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn load_key() -> String {
     dotenv().ok();
     let Ok(api_key) = env::var("API_LEAGUE_API_KEY") else {
         panic!("API key could not be loaded correctly from the environmental variables.");
     };
-    let arg = Args::parse();
+    api_key
+}
+
+async fn get_meme(kw : String, key : String) -> Meme {
     let params = [
-        ("keywords", &arg.keyword_to_search),
-        ("api-key", &api_key),
-        ("media-type", &String::from("image/jpeg")),
+        ("keywords", kw),
+        ("api-key", key),
+        ("media-type", String::from("image/jpeg")),
     ];
-    let client = reqwest::Client::new();
-    let content: Meme = client
+    reqwest::Client::new()
         .get(BASE_URL)
         .query(&params)
         .send()
-        .await?
+        .await
+        .unwrap()
         .json()
-        .await?;
+        .await
+        .unwrap()
+}
 
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {  
+    let arg = Args::parse();
+    let content = get_meme(arg.keyword_to_search, load_key()).await;
     println!("Here is your content: {content:?}");
 
     Ok(())
